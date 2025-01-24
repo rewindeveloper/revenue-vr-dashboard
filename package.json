@@ -14,10 +14,14 @@
     "web-vitals": "^4.2.4"
   },
   "scripts": {
-    "start": "concurrently \"npm run react-start\" \"npm run server-start\"",
-    "react-start": "react-scripts start",
-    "server-start": "node src/server.js"
-  },
+  "start": "concurrently \"npm run react-start\" \"npm run server-start\"",
+  "react-start": "react-scripts start",
+  "server-start": "node src/server.js",
+  "build": "react-scripts build",
+  "test": "react-scripts test",
+  "lint": "eslint .",
+  "prettify": "prettier --write \"src/**/*.{js,jsx,css,scss}\""
+},
   "eslintConfig": {
     "extends": [
       "react-app",
