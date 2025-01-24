@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
+const path = require("path"); // To handle file paths
 
 const app = express();
 app.use(cors());
@@ -86,6 +87,14 @@ app.get("/api/patients", async (req, res) => {
     }
 });
 
+// Serve React build files in production
+const buildPath = path.join(__dirname, "..", "build");
+app.use(express.static(buildPath));
+
+app.get("*", (req, res) => {
+    res.sendFile(path.join(buildPath, "index.html"));
+});
+
 // Fallback route for unmatched endpoints
 app.use((req, res) => {
     res.status(404).json({ error: "Endpoint not found." });
@@ -93,5 +102,5 @@ app.use((req, res) => {
 
 // Start the server
 require("dotenv").config();
-const PORT = process.env.REACT_APP_SERVER_PORT;
-app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+const PORT = process.env.REACT_APP_SERVER_PORT || 5002;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
