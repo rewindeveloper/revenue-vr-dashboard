@@ -23,52 +23,47 @@ const transformPatientData = (data) => {
 
 // Route to fetch patient data with or without filters
 app.get("/api/patients", async (req, res) => {
-    const { filter, customDate } = req.query;
+    const { filter, startDate, endDate } = req.query;
 
-    let apiUrl = "https://qa.rewinhealth.com/api/discharge/Invoice";
-    let startDate, endDate;
+    let apiUrl = "https://app.rewinhealth.com/api/discharge/Invoice";
+    let formattedStartDate, formattedEndDate;
 
     try {
-        if (filter === "All") {
-            // Do not apply any date filter
-            console.log("Fetching all data...");
-        } else if (customDate) {
-            startDate = endDate = customDate;
+        const today = new Date();
+
+        if (startDate && endDate) {
+            // Custom Date Range Handling
+            formattedStartDate = formatDate(startDate);
+            formattedEndDate = formatDate(endDate);
         } else if (filter) {
-            const today = new Date();
+            // Handle predefined date filters
             switch (filter) {
                 case "Today":
-                    startDate = endDate = today.toISOString().split("T")[0];
+                    formattedStartDate = formattedEndDate = formatDate(today.toISOString().split("T")[0]);
                     break;
                 case "7D":
-                    startDate = new Date(today.setDate(today.getDate() - 7)).toISOString().split("T")[0];
-                    endDate = new Date().toISOString().split("T")[0];
+                    formattedStartDate = formatDate(new Date(today.setDate(today.getDate() - 7)).toISOString().split("T")[0]);
+                    formattedEndDate = formatDate(new Date().toISOString().split("T")[0]);
                     break;
                 case "30D":
-                    startDate = new Date(today.setDate(today.getDate() - 30)).toISOString().split("T")[0];
-                    endDate = new Date().toISOString().split("T")[0];
+                    formattedStartDate = formatDate(new Date(today.setDate(today.getDate() - 30)).toISOString().split("T")[0]);
+                    formattedEndDate = formatDate(new Date().toISOString().split("T")[0]);
                     break;
                 case "3M":
-                    startDate = new Date(today.setMonth(today.getMonth() - 3)).toISOString().split("T")[0];
-                    endDate = new Date().toISOString().split("T")[0];
+                    formattedStartDate = formatDate(new Date(today.setMonth(today.getMonth() - 3)).toISOString().split("T")[0]);
+                    formattedEndDate = formatDate(new Date().toISOString().split("T")[0]);
                     break;
                 case "6M":
-                    startDate = new Date(today.setMonth(today.getMonth() - 6)).toISOString().split("T")[0];
-                    endDate = new Date().toISOString().split("T")[0];
+                    formattedStartDate = formatDate(new Date(today.setMonth(today.getMonth() - 6)).toISOString().split("T")[0]);
+                    formattedEndDate = formatDate(new Date().toISOString().split("T")[0]);
                     break;
                 default:
                     return res.status(400).json({ error: "Invalid filter value." });
             }
         }
 
-        // If a date range is specified, append it to the API URL
-        if (startDate && endDate) {
-            const formatDate = (date) => {
-                const [year, month, day] = date.split("-");
-                return `${day}-${month}-${year}`;
-            };
-            const formattedStartDate = formatDate(startDate);
-            const formattedEndDate = formatDate(endDate);
+        // Append the date range to API URL
+        if (formattedStartDate && formattedEndDate) {
             apiUrl += `?startDate=${formattedStartDate}&endDate=${formattedEndDate}`;
         }
 
@@ -86,6 +81,12 @@ app.get("/api/patients", async (req, res) => {
         res.status(500).json({ error: "Failed to fetch data from the external API." });
     }
 });
+
+// Helper function to format date (YYYY-MM-DD to DD-MM-YYYY)
+const formatDate = (date) => {
+    const [year, month, day] = date.split("-");
+    return `${day}-${month}-${year}`;
+};
 
 // Serve React build files in production
 const buildPath = path.join(__dirname, "..", "build");
