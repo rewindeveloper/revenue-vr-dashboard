@@ -6,6 +6,7 @@ import PatientDetails from "./components/PatientDetails";
 import Login from "./components/Login";
 import "./styles.css";
 
+
 const App = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(
         localStorage.getItem("isLoggedIn") === "true"
@@ -15,7 +16,9 @@ const App = () => {
     const [filter, setFilter] = useState("All");
     const [totalUniquePatients, setTotalUniquePatients] = useState(0);
     const [totalUniqueClinics, setTotalUniqueClinics] = useState(0);
-    const [customDate, setCustomDate] = useState(null);
+    //const [customDate, setCustomDate] = useState(null);
+    const [startDate, setStartDate] = useState(null);
+    const [endDate, setEndDate] = useState(null);
     const [clinicFilter, setClinicFilter] = useState("All");
     const [therapistFilter, setTherapistFilter] = useState("All");
     const [patientFilter, setPatientFilter] = useState("All");
@@ -47,13 +50,16 @@ const App = () => {
 
     const handleFilterChange = (newFilter) => {
         setFilter(newFilter);
-        setCustomDate(null);
+        setStartDate(null);
+        setEndDate(null);
+        //setCustomDate(null);
         setSelectedPatient(null);
     };
 
-    const handleCustomDateChange = (selectedDate) => {
+    const handleCustomDateChange = (selectedStartDate, selectedEndDate) => {
         setFilter("Custom");
-        setCustomDate(selectedDate);
+        setStartDate(selectedStartDate);
+        setEndDate(selectedEndDate);
         setSelectedPatient(null);
     };
 
@@ -78,8 +84,8 @@ const App = () => {
             try {
                 let apiUrl = `${process.env.REACT_APP_API_BASE_URL}/api/patients`;
 
-                if (customDate) {
-                    apiUrl += `?customDate=${customDate}`;
+                if (startDate && endDate) {
+                    apiUrl += `?startDate=${startDate}&endDate=${endDate}`;
                 } else if (filter && filter !== "All") {
                     apiUrl += `?filter=${filter}`;
                 }
@@ -88,14 +94,22 @@ const App = () => {
                 const data = await response.json();
 
                 if (data.patients && data.patients.length > 0) {
+                    const parseDate = (dateStr) => {
+                        if (!dateStr) return new Date(0); // Handle empty/null dates
+                        const parts = dateStr.split("-");
+                        if (parts.length !== 3) return new Date(0); // Handle incorrect formats
+                        return new Date(`${parts[2]}-${parts[1]}-${parts[0]}`); // Convert DD-MM-YYYY to YYYY-MM-DD
+                    };
+                    
                     const patientList = data.patients.map((patient) => ({
                         ...patient,
+                        date: patient.date, // Keep original date format
+                        parsedDate: parseDate(patient.date), // Store parsed date for sorting
                         sessions: patient.sessionData.gamesList.map((games, index) => ({
                             sessionNumber: index + 1,
                             games: games.join(", "),
                         })),
-                    }));
-
+                    })).sort((a, b) => b.parsedDate - a.parsedDate); // Sort by parsedDate (latest first)                    
                     const uniqueClinics = [
                         "All",
                         ...new Set(patientList.map((patient) => patient.clinicName)),
@@ -137,7 +151,7 @@ const App = () => {
         if (isLoggedIn) {
             fetchData();
         }
-    }, [filter, customDate, isLoggedIn]);
+    }, [filter, startDate, endDate, isLoggedIn]);
 
     const filteredPatients = patients
     .filter((patient) => {
@@ -179,15 +193,33 @@ const App = () => {
         (total, patient) => total + patient.sessionData.numberOfSessions,
         0
     );
-    const totalNeuroPatients = filteredPatients.filter(
-        (patient) => patient.condition === "Neuro"
-    ).length;
-    const totalCardioPatients = filteredPatients.filter(
-        (patient) => patient.condition === "Cardio"
-    ).length;
-    const totalOrthoPatients = filteredPatients.filter(
-        (patient) => patient.condition === "Ortho"
-    ).length;
+    
+    // Unique Patients Count
+    const uniquePatientSet = new Set(filteredPatients.map((patient) => patient.patientName));
+    const uniquePatientCount = uniquePatientSet.size;
+    const totalPatientsCount = filteredPatients.length;
+    
+    // Unique Neuro Patients
+    const uniqueNeuroSet = new Set(
+        filteredPatients.filter((patient) => patient.condition === "Neuro").map((patient) => patient.patientName)
+    );
+    const uniqueNeuroCount = uniqueNeuroSet.size;
+    const totalNeuroPatients = filteredPatients.filter((patient) => patient.condition === "Neuro").length;
+    
+    // Unique Cardio Patients
+    const uniqueCardioSet = new Set(
+        filteredPatients.filter((patient) => patient.condition === "Cardio").map((patient) => patient.patientName)
+    );
+    const uniqueCardioCount = uniqueCardioSet.size;
+    const totalCardioPatients = filteredPatients.filter((patient) => patient.condition === "Cardio").length;
+    
+    // Unique Ortho Patients
+    const uniqueOrthoSet = new Set(
+        filteredPatients.filter((patient) => patient.condition === "Ortho").map((patient) => patient.patientName)
+    );
+    const uniqueOrthoCount = uniqueOrthoSet.size;
+    const totalOrthoPatients = filteredPatients.filter((patient) => patient.condition === "Ortho").length;
+    
 
     const totalEntries = filteredPatients.length;
     const indexOfLastEntry = currentPage * entriesPerPage;
@@ -307,7 +339,7 @@ const App = () => {
                                 <p>Total Clinics Utilised</p>
                             </div>
                             <div className="patient-tile">
-                                <h3>{filteredPatients.length}</h3>
+                                <h3>{uniquePatientCount}</h3>
                                 <p>Total Patients Utilised</p>
                             </div>
                             <div className="sessions-tile">
@@ -317,15 +349,15 @@ const App = () => {
                         </div>
                         <div className="condition-tile-container">
                             <div className="neuro-tile">
-                                <h3>{totalNeuroPatients}</h3>
+                                <h3>{uniqueNeuroCount}</h3>
                                 <p>Total Neuro Patients</p>
                             </div>
                             <div className="neuro-tile">
-                                <h3>{totalCardioPatients}</h3>
+                                <h3>{uniqueCardioCount}</h3>
                                 <p>Total Cardio Patients</p>
                             </div>
                             <div className="neuro-tile">
-                                <h3>{totalOrthoPatients}</h3>
+                                <h3>{uniqueOrthoCount}</h3>
                                 <p>Total Ortho Patients</p>
                             </div>
                         </div>
@@ -341,23 +373,43 @@ const App = () => {
                                     <div className="pagination">
                                         <p>
                                             Showing {indexOfFirstEntry + 1}-
-                                            {Math.min(indexOfLastEntry, totalEntries)} of{" "}
-                                            {totalEntries} entries
+                                            {Math.min(indexOfLastEntry, totalEntries)} of {totalEntries} entries
                                         </p>
-                                        {Array.from({ length: totalPages }, (_, index) => (
-                                            <button
-                                                key={index + 1}
-                                                onClick={() => handlePageChange(index + 1)}
-                                                className={
-                                                    currentPage === index + 1
-                                                        ? "pagination-button active"
-                                                        : "pagination-button"
-                                                }
-                                            >
-                                                {index + 1}
-                                            </button>
-                                        ))}
+                                        <button
+                                            onClick={() => handlePageChange(1)}
+                                            disabled={currentPage === 1}
+                                            className="pagination-button"
+                                        >
+                                            ««
+                                        </button>
+                                        <button
+                                            onClick={() => handlePageChange(currentPage - 1)}
+                                            disabled={currentPage === 1}
+                                            className="pagination-button"
+                                        >
+                                            «
+                                        </button>
+
+                                        <span className="pagination-info">
+                                            Page {currentPage} of {totalPages}
+                                        </span>
+
+                                        <button
+                                            onClick={() => handlePageChange(currentPage + 1)}
+                                            disabled={currentPage === totalPages}
+                                            className="pagination-button"
+                                        >
+                                            »
+                                        </button>
+                                        <button
+                                            onClick={() => handlePageChange(totalPages)}
+                                            disabled={currentPage === totalPages}
+                                            className="pagination-button"
+                                        >
+                                            »»
+                                        </button>
                                     </div>
+
                                 </>
                             ) : (
                                 <>
