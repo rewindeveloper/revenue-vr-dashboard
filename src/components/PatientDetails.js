@@ -1,40 +1,42 @@
-import React from "react";
-import "../styles.css";
+import React, { useEffect, useState } from "react";
+import Sessions from "./Sessions";
 
-const PatientList = ({ patientData, onPatientSelect }) => {
-    if (!patientData || patientData.length === 0) {
-        return <p>No patient data available.</p>;
-    }
+const PatientDetails = ({ data }) => {
+    const [patientData, setPatientData] = useState(null);
+
+    useEffect(() => {
+        if (data) {
+            // Directly use the passed `data` as patient details
+            setPatientData(data);
+        }
+    }, [data]);
+
+    if (!patientData) return <p>Loading...</p>;
+
+    const { date, patientName, therapistEmail, clinicName, condition, sessionData } = patientData;
 
     return (
         <div>
-            <h3 className="mt-4" style={{ color: "white" }}>Patient List</h3>
-            <table className="table table-bordered mt-3 patient-table">
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Patient Name</th>
-                        <th>Clinic Name</th>
-                        <th>Condition</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {patientData.map((patient, index) => (
-                        <tr
-                            key={index}
-                            onClick={() => onPatientSelect(patient)}
-                            style={{ cursor: "pointer" }}
-                        >
-                            <td>{patient.date}</td>
-                            <td>{patient.patientName}</td>
-                            <td>{patient.clinicName}</td>
-                            <td>{patient.condition === "Stroke" ? "Neuro" : patient.condition}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
+            <p>
+                <strong>Date:</strong> {date}
+            </p>
+            <p>
+                <strong>Patient Name:</strong> {patientName}
+            </p>
+            <p>
+                <strong>Therapist Email:</strong> {therapistEmail}
+            </p>
+            <p>
+                <strong>Clinic Name:</strong> {clinicName}
+            </p>
+            <p>
+                <strong>Condition:</strong> {condition}
+            </p>
+
+            {/* Use the Sessions component and pass sessionData */}
+            <Sessions sessionData={sessionData} />
         </div>
     );
 };
 
-export default PatientList;
+export default PatientDetails;
