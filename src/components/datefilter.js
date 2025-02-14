@@ -71,7 +71,7 @@ const DateFilter = ({ onFilterChange, onCustomDateChange }) => {
                     />
                 </button>
             </div>
-            {["All", "Today", "7D", "30D", "3M", "6M"].map((filter) => (
+            {["All", "Today", "07D", "30D", "3M", "6M"].map((filter) => (
                 <button
                     key={filter}
                     className={`filter-btn ${activeFilter === filter ? "selected" : ""}`}
