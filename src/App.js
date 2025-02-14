@@ -27,6 +27,7 @@ const App = () => {
     const [patientNames, setPatientNames] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
     const entriesPerPage = 10;
+    
 
     const handleLoginSuccess = () => {
         setIsLoggedIn(true);
@@ -165,7 +166,18 @@ const App = () => {
     .map((patient) => ({
         ...patient,
         condition: patient.condition === "Stroke" ? "Neuro" : patient.condition,
+        sessionDetails: patient.sessionData?.gamesList.map((session, index) => ({
+            sessionNumber: index + 1, // Session number
+            subSessions: session.map((subSession) => ({
+                sessionTime: subSession.sessionTime || "N/A",
+                totalGames: subSession.allGames.length || 0, // Total number of games played
+                completedGames: subSession.completedGames.length > 0
+                    ? subSession.completedGames.join(", ") // Completed games list
+                    : "-",
+            })),
+        })) || [], // Default empty array if no sessions exist
     }));
+
 
     const filteredTherapists = patients
     .filter((patient) => {
@@ -237,40 +249,62 @@ const App = () => {
 
 
     const downloadCSV = () => {
-        const timestamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15);
-        const csvContent = [
-            [
-                "Date",
-                "Patient Name",
-                "Therapist Email",
-                "Clinic Name",
-                "Condition",
-                "Total Sessions",
-                "Session Number",
-                "Games Played",
-            ],
-            ...filteredPatients.flatMap((patient) =>
-                patient.sessions.map((session) => [
-                    patient.date,
-                    patient.patientName,
-                    patient.therapistEmail,
-                    patient.clinicName,
-                    patient.condition === "Stroke" ? "Neuro" : patient.condition, // Replace Stroke with Neuro
-                    patient.sessionData.numberOfSessions,
-                    session.sessionNumber,
-                    session.games,
-                ])
-            ),
-        ]
-            .map((row) => row.join(","))
-            .join("\n");
+        try {
+            const timestamp = new Date().toISOString().replace(/[-:]/g, "").slice(0, 15);
+            const csvContent = [
+                [
+                    "Date",
+                    "Patient Name",
+                    "Therapist Email",
+                    "Clinic Name",
+                    "Condition",
+                    "Total Sessions",
+                    "Session Number",
+                    "Time",
+                    "Total Games Assigned",
+                    "Completed Games"
+                ],
+                ...filteredPatients.flatMap((patient) =>
+                    patient.sessionDetails.flatMap((session) =>
+                        session.subSessions.map((subSession) => [
+                            patient.date || "N/A",
+                            patient.patientName || "N/A",
+                            patient.therapistEmail || "N/A",
+                            patient.clinicName || "N/A",
+                            patient.condition || "N/A",
+                            patient.sessionDetails.length || 0, // Total sessions count
+                            session.sessionNumber || "N/A", // Session number
+                            subSession.sessionTime || "N/A", // Time of sub-session
+                            subSession.totalGames || 0, // Total games played
+                            subSession.completedGames // Completed games only
+                        ])
+                    )
+                ),
+            ]
+                .map((row) => row.join(",")) // Convert array to CSV row
+                .join("\n"); // Join rows with newline
     
-        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `Filtered_Data_${timestamp}.csv`;
-        link.click();
+            if (!csvContent) {
+                throw new Error("No data to generate CSV.");
+            }
+    
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Filtered_Data_${timestamp}.csv`;
+    
+            // Append link to body, trigger download, and remove the link
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } catch (error) {
+            console.error("Error generating CSV:", error);
+            alert("Error generating CSV. Please try again.");
+        }
     };
+    
+    
+    
     const uniqueTherapists = ["All", ...new Set(filteredTherapists)];
     const uniquePatientNames = ["All", ...new Set(filteredPatientNames)];
     
