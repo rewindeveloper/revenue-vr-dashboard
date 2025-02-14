@@ -119,7 +119,6 @@ h1 {
 .custom-date-picker:hover {
     background-color: #3d3d5d; /* Darker color on hover */
 }
-
 .session-details-table {
     width: 100%;
     border-collapse: separate; /* Use 'separate' to allow border-radius to work */
@@ -134,35 +133,48 @@ h1 {
 .session-details-table td {
     border: 1px solid #9794f6b6; /* Border for cells */
     padding: 12px 15px; /* Padding for content */
+    text-align: center; /* Center-align all content */
+    vertical-align: middle; /* Ensure vertical alignment in the middle */
 }
 
 .session-details-table th {
-    border: 1px solid #9794f6b6;
     background-color: #6c63ff; /* Header background color */
     color: white; /* Header text color */
     font-weight: bold;
     text-align: center;
 }
 
+/* Rounded corners */
 .session-details-table tr:first-child th:first-child {
-    border-top-left-radius: 8px; /* Top-left corner */
+    border-top-left-radius: 8px;
 }
   
 .session-details-table tr:first-child th:last-child {
-    border-top-right-radius: 8px; /* Top-right corner */
+    border-top-right-radius: 8px;
 }
   
-.session-details-table tr:last-child td:first-child {
-    border-bottom-left-radius: 8px; /* Bottom-left corner */
-}
+/*.session-details-table tr:last-child td:first-child {
+    border-bottom-left-radius: 8px;
+}*/
   
 .session-details-table tr:last-child td:last-child {
-    border-bottom-right-radius: 8px; /* Bottom-right corner */
+    border-bottom-right-radius: 8px;
 }
 
-.session-details-table tr:hover {
-    background-color: #3e3e40; /* Hover effect */
+/* Styling for numbered lists inside table cells */
+.session-details-table td ol {
+    padding-left: 0; /* Remove default indentation */
+    margin: 0;
+    list-style-position: inside; /* Ensure numbering is inside the cell */
 }
+
+/* Adjusting font size and spacing inside lists */
+.session-details-table td ol li {
+    text-align: left; /* Align text inside list items */
+    margin-left: 10px; /* Small indent for better readability */
+}
+
+
 /* Login Page Layout */
 .login-page {
     display: flex;
