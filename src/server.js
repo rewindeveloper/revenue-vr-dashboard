@@ -25,7 +25,7 @@ const transformPatientData = (data) => {
 app.get("/api/patients", async (req, res) => {
     const { filter, startDate, endDate } = req.query;
 
-    let apiUrl = "https://app.rewinhealth.com/api/discharge/Invoice";
+    let apiUrl = "https://qa.rewinhealth.com/api/discharge/Invoice";
     let formattedStartDate, formattedEndDate;
 
     try {
@@ -41,7 +41,7 @@ app.get("/api/patients", async (req, res) => {
                 case "Today":
                     formattedStartDate = formattedEndDate = formatDate(today.toISOString().split("T")[0]);
                     break;
-                case "7D":
+                case "07D":
                     formattedStartDate = formatDate(new Date(today.setDate(today.getDate() - 7)).toISOString().split("T")[0]);
                     formattedEndDate = formatDate(new Date().toISOString().split("T")[0]);
                     break;
