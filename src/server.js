@@ -25,7 +25,7 @@ const transformPatientData = (data) => {
 app.get("/api/patients", async (req, res) => {
     const { filter, startDate, endDate } = req.query;
 
-    let apiUrl = "https://qa.rewinhealth.com/api/discharge/Invoice";
+    let apiUrl = "https://app.rewinhealth.com/api/discharge/Invoice";
     let formattedStartDate, formattedEndDate;
 
     try {
